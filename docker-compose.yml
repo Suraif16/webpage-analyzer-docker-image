@@ -1,0 +1,30 @@
+services:
+  backend:
+    image: suraif16/webpage-analyzer-backend:v2
+    ports:
+      - "${PORT:-8080}:${PORT:-8080}"
+    env_file:
+      - ./webpage-analyzer-backend/.env
+    environment:
+      - GIN_MODE=release
+      - PORT=${PORT:-8080}
+      - ALLOWED_ORIGINS=http://frontend:${FRONTEND_PORT:-3000}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-8080}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    image: suraif16/webpage-analyzer-frontend:v2
+    ports:
+      - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
+    env_file:
+      - ./webpage-analyzer-frontend/.env
+    environment:
+      - PORT=${FRONTEND_PORT:-3000}
+      - NEXT_PUBLIC_API_URL=http://backend:${PORT:-8080}
+    depends_on:
+      - backend
+    restart: unless-stopped
